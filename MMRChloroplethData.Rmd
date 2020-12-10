@@ -1,0 +1,46 @@
+---
+title: "DataMungingMMR"
+author: "Selma Gomez Orr"
+date: "10/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Get packages,  eval=TRUE, include=FALSE}
+library(tidyverse)
+library(purrr)
+```
+
+```{r clean, echo=FALSE}
+MMR <- read.csv(file = 'MMR1.csv')
+list_of_names = names(MMR)
+list_of_names[1]= "country"
+for (i in 2:41){
+  list_of_names[i] <- 2021 - i
+}
+names(MMR) <- list_of_names
+MMR1 <- MMR %>% slice(-1)
+
+col_order <- c("country", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998","1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+MMR1 <- MMR1[, col_order]
+
+MMR2 = MMR1 %>%
+  pivot_longer(!country, names_to = "year", values_to = "coverage")
+```
+
+```{r save, echo=FALSE}
+isoCodes <- read.csv(file = 'CountryIso.csv')
+isoCodes <- isoCodes %>%
+  select(country, iso_alpha)
+
+MMRChloro <- left_join(MMR2, isoCodes, by=c('country'='country'))
+
+```
+
+```{r save, echo=FALSE}
+
+write.csv(MMRChloro,'MMR1Map.csv')
+```

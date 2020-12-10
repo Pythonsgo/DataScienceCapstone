@@ -1,0 +1,47 @@
+---
+title: "DataMungingRotovirus"
+author: "Selma Gomez Orr"
+date: "10/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Get packages,  eval=TRUE, include=FALSE}
+library(tidyverse)
+library(purrr)
+```
+
+```{r clean, echo=FALSE}
+ROT <- read.csv(file = 'ROT.csv')
+list_of_names = names(ROT)
+list_of_names[1]= "country"
+for (i in 2:15){
+  list_of_names[i] <- 2021 - i
+}
+names(ROT) <- list_of_names
+ROT1 <- ROT %>% slice(-1)
+
+col_order <- c("country", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+ROT1 <- ROT1[, col_order]
+
+ROT2 = ROT1 %>%
+  pivot_longer(!country, names_to = "year", values_to = "coverage")
+```
+
+```{r save, echo=FALSE}
+isoCodes <- read.csv(file = 'CountryIso.csv')
+isoCodes <- isoCodes %>%
+  select(country, iso_alpha)
+
+ROTChloro <- left_join(ROT2, isoCodes, by=c('country'='country'))
+
+```
+
+```{r save, echo=FALSE}
+
+write.csv(ROTChloro,'ROTMap.csv')
+```
+

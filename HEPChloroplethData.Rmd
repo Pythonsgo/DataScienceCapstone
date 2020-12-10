@@ -1,0 +1,47 @@
+---
+title: "DataMungingHEP"
+author: "Selma Gomez Orr"
+date: "10/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Get packages,  eval=TRUE, include=FALSE}
+library(tidyverse)
+library(purrr)
+```
+
+```{r clean, echo=FALSE}
+HEP <- read.csv(file = 'HEP.csv')
+list_of_names = names(HEP)
+list_of_names[1]= "country"
+for (i in 2:32){
+  list_of_names[i] <- 2021 - i
+}
+names(HEP) <- list_of_names
+HEP1 <- HEP %>% slice(-1)
+
+col_order <- c("country", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998","1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+HEP1 <- HEP1[, col_order]
+
+HEP2 = HEP1 %>%
+  pivot_longer(!country, names_to = "year", values_to = "coverage")
+```
+
+```{r save, echo=FALSE}
+isoCodes <- read.csv(file = 'CountryIso.csv')
+isoCodes <- isoCodes %>%
+  select(country, iso_alpha)
+
+HEPChloro <- left_join(HEP2, isoCodes, by=c('country'='country'))
+
+```
+
+```{r save, echo=FALSE}
+
+write.csv(HEPChloro,'HEPMap.csv')
+```
+
