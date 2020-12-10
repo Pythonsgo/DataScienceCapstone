@@ -1,0 +1,519 @@
+---
+title: "CFR_AGE_5Country"
+author: "Selma Gomez Orr"
+date: "12/9/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Get packages,  eval=TRUE, include=FALSE}
+library(tidyverse)
+library(purrr)
+library(plyr)
+```
+
+```{r clean, echo=FALSE}
+data_CFR_Age <- read.csv(file = 'CFRAge5C.csv')
+names(data_CFR_Age) = c("Country", "CFR_0to9","CFR_10to19", "CFR_20to29", "CFR_30to39", "CFR_40to49", "CFR_50to59", "CFR_60to69", "CFR_70to79","CFR_80+")
+CFR_Age <- data_CFR_Age %>% select("Country", "CFR_0to9","CFR_10to19", "CFR_20to29", "CFR_30to39", "CFR_40to49")
+CFR_Age$Country <- trimws(CFR_Age$Country)
+
+```
+
+```{r clean, echo=FALSE}
+MMRclean <- read.csv(file = 'MMR1.csv')
+list_of_names = names(MMRclean)
+list_of_names[1]= "country"
+for (i in 2:41){
+  list_of_names[i] <- 2021 - i
+}
+names(MMRclean) <- list_of_names
+MMR1clean <- MMRclean %>% slice(-1)
+
+col_order <- c("country", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998","1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+MMR1clean <- MMR1clean[, col_order]
+
+
+#Create columns that are the means for different age groups.
+MMR1clean$MMRyears_0to9 <- rowMeans(MMR1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+MMR1clean$MMRyears_10to19 <- rowMeans(MMR1clean[,c('2010', '2009', '2008','2007', '2006', '2005', '2004', '2003', '2002', '2001')], na.rm=TRUE) 
+
+MMR1clean$MMRyears_20to29 <- rowMeans(MMR1clean[,c('2000','1999', '1998','1997', '1996', '1995', '1994', '1993', '1992', '1991')], na.rm=TRUE)
+
+MMR1clean$MMRyears_30to39 <- rowMeans(MMR1clean[,c('1990','1989', '1988','1987', '1986', '1985', '1984', '1983', '1982', '1981')], na.rm=TRUE)
+ 
+MMR1clean$MMRyears_40 <- rowMeans(MMR1clean[,c('1980', '1980')], na.rm=TRUE)
+
+MMR_Age <- MMR1clean %>% select(country, MMRyears_0to9, MMRyears_10to19, MMRyears_20to29, MMRyears_30to39, MMRyears_40)
+
+MMR_Age$country <- trimws(MMR_Age$country)
+
+```
+
+```{r clean, echo=FALSE}
+MMRCFR_Age <- left_join(CFR_Age, MMR_Age, by=c('Country'='country')) 
+
+```
+
+
+```{r save, echo=FALSE}
+
+regMMRCFR_0to9 <- lm(CFR_0to9~MMRyears_0to9, data=MMRCFR_Age)
+
+with(MMRCFR_Age, plot(MMRyears_0to9, CFR_0to9, main = "MMR Vaccine Coverage and CFR for Ages 0 to 9", xlab = "Group Coverage for MMR Vaccination", ylab = "CFR Level"))
+abline(regMMRCFR_0to9)
+
+```
+
+```{r save, echo=FALSE}
+
+regMMRCFR_10to19 <- lm(CFR_10to19~MMRyears_10to19, data=MMRCFR_Age)
+
+with(MMRCFR_Age, plot(MMRyears_10to19, CFR_10to19, main = "MMR Vaccine Coverage and CFR for Ages 10 to 19", xlab = "Group Coverage for MMR Vaccination", ylab = "CFR Level"))
+abline(regMMRCFR_10to19)
+
+```
+
+```{r save, echo=FALSE}
+
+regMMRCFR_20to29 <- lm(CFR_20to29~MMRyears_20to29, data=MMRCFR_Age)
+
+with(MMRCFR_Age, plot(MMRyears_20to29, CFR_20to29, main = "MMR Vaccine Coverage and CFR for Ages 20 to 29", xlab = "Group Coverage for MMR Vaccination", ylab = "CFR Level"))
+abline(regMMRCFR_20to29)
+
+```
+
+```{r save, echo=FALSE}
+
+regMMRCFR_30to39 <- lm(CFR_30to39~MMRyears_30to39, data=MMRCFR_Age)
+
+with(MMRCFR_Age, plot(MMRyears_30to39, CFR_30to39, main = "MMR Vaccine Coverage and CFR for Ages 30 to 39", xlab = "Group Coverage for MMR Vaccination", ylab = "CFR Level"))
+abline(regMMRCFR_30to39)
+
+```
+
+```{r save, echo=FALSE}
+
+regMMRCFR_40 <- lm(CFR_40to49~MMRyears_40, data=MMRCFR_Age)
+
+with(MMRCFR_Age, plot(MMRyears_40, CFR_40to49, main = "MMR Vaccine Coverage and CFR for Ages 40", xlab = "Group Coverage for MMR Vaccination", ylab = "CFR Level"))
+abline(regMMRCFR_30to39)
+
+```
+
+```{r clean, echo=FALSE}
+DTAPclean <- read.csv(file = 'dtap.csv')
+list_of_names = names(DTAPclean)
+list_of_names[1]= "country"
+for (i in 2:41){
+  list_of_names[i] <- 2021 - i
+}
+names(DTAPclean) <- list_of_names
+DTAP1clean <- DTAPclean %>% slice(-1)
+
+col_order <- c("country", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998","1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+DTAP1clean <- DTAP1clean[, col_order]
+
+DTAP1clean <- DTAP1clean[, col_order]
+
+#Create columns that are the means for different age groups.
+DTAP1clean$DTAPyears_0to9 <- rowMeans(DTAP1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+DTAP1clean$DTAPyears_10to19 <- rowMeans(DTAP1clean[,c('2010', '2009', '2008','2007', '2006', '2005', '2004', '2003', '2002', '2001')], na.rm=TRUE) 
+
+DTAP1clean$DTAPyears_20to29 <- rowMeans(DTAP1clean[,c('2000','1999', '1998','1997', '1996', '1995', '1994', '1993', '1992', '1991')], na.rm=TRUE)
+
+DTAP1clean$DTAPyears_30to39 <- rowMeans(DTAP1clean[,c('1990','1989', '1988','1987', '1986', '1985', '1984', '1983', '1982', '1981')], na.rm=TRUE)
+ 
+DTAP1clean$DTAPyears_40 <- rowMeans(DTAP1clean[,c('1980', '1980')], na.rm=TRUE)
+
+DTAP_Age <- DTAP1clean %>% select(country, DTAPyears_0to9, DTAPyears_10to19, DTAPyears_20to29, DTAPyears_30to39, DTAPyears_40)
+
+DTAP_Age$country <- trimws(DTAP_Age$country)
+
+```
+
+```{r clean, echo=FALSE}
+DTAPCFR_Age <- left_join(CFR_Age, DTAP_Age, by=c('Country'='country')) 
+
+```
+
+
+```{r save, echo=FALSE}
+
+regDTAPCFR_0to9 <- lm(CFR_0to9~DTAPyears_0to9, data=DTAPCFR_Age)
+
+with(DTAPCFR_Age, plot(DTAPyears_0to9, CFR_0to9, main = "DTaP Vaccine Coverage and CFR for Ages 0 to 9", xlab = "Group Coverage for DTaP Vaccination", ylab = "CFR Level"))
+abline(regMMRCFR_0to9)
+
+```
+
+```{r save, echo=FALSE}
+
+regDTAPCFR_10to19 <- lm(CFR_10to19~DTAPyears_10to19, data=DTAPCFR_Age)
+
+with(DTAPCFR_Age, plot(DTAPyears_10to19, CFR_10to19, main = "DTaP Vaccine Coverage and CFR for Ages 10 to 19", xlab = "Group Coverage for DTaP Vaccination", ylab = "CFR Level"))
+abline(regMMRCFR_10to19)
+
+```
+
+
+```{r save, echo=FALSE}
+
+regDTAPCFR_20to29 <- lm(CFR_20to29~DTAPyears_20to29, data=DTAPCFR_Age)
+
+with(DTAPCFR_Age, plot(DTAPyears_20to29, CFR_20to29, main = "DTaP Vaccine Coverage and CFR for Ages 20 to 29", xlab = "Group Coverage for DTaP Vaccination", ylab = "CFR Level"))
+abline(regMMRCFR_20to29)
+
+```
+
+```{r save, echo=FALSE}
+
+regDTAPCFR_30to39 <- lm(CFR_30to39~DTAPyears_30to39, data=DTAPCFR_Age)
+
+with(DTAPCFR_Age, plot(DTAPyears_30to39, CFR_30to39, main = "DTaP Vaccine Coverage and CFR for Ages 30 to 39", xlab = "Group Coverage for DTaP Vaccination", ylab = "CFR Level"))
+abline(regMMRCFR_30to39)
+
+```
+
+```{r clean, echo=FALSE}
+POLclean <- read.csv(file = 'POL.csv')
+list_of_names = names(POLclean)
+list_of_names[1]= "country"
+for (i in 2:41){
+  list_of_names[i] <- 2021 - i
+}
+names(POLclean) <- list_of_names
+POL1clean <- POLclean %>% slice(-1)
+
+col_order <- c("country", "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998","1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+POL1clean <- POL1clean[, col_order]
+
+#Create columns that are the means for different age groups.
+POL1clean$POLyears_0to9 <- rowMeans(POL1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+POL1clean$POLyears_10to19 <- rowMeans(POL1clean[,c('2010', '2009', '2008','2007', '2006', '2005', '2004', '2003', '2002', '2001')], na.rm=TRUE) 
+
+POL1clean$POLyears_20to29 <- rowMeans(POL1clean[,c('2000','1999', '1998','1997', '1996', '1995', '1994', '1993', '1992', '1991')], na.rm=TRUE)
+
+POL1clean$POLyears_30to39 <- rowMeans(POL1clean[,c('1990','1989', '1988','1987', '1986', '1985', '1984', '1983', '1982', '1981')], na.rm=TRUE)
+ 
+POL1clean$POLyears_40 <- rowMeans(POL1clean[,c('1980', '1980')], na.rm=TRUE)
+
+POL_Age <- POL1clean %>% select(country, POLyears_0to9, POLyears_10to19, POLyears_20to29, POLyears_30to39, POLyears_40)
+
+POL_Age$country <- trimws(POL_Age$country)
+
+```
+
+```{r clean, echo=FALSE}
+POLCFR_Age <- left_join(CFR_Age, POL_Age, by=c('Country'='country')) 
+
+```
+
+```{r save, echo=FALSE}
+
+regPOLCFR_0to9 <- lm(CFR_0to9~POLyears_0to9, data=POLCFR_Age)
+
+with(POLCFR_Age, plot(POLyears_0to9, CFR_0to9, main = "Polio Vaccine Coverage and CFR for Ages 0 to 9", xlab = "Group Coverage for Polio Vaccination", ylab = "CFR Level"))
+abline(regPOLCFR_0to9)
+
+```
+
+```{r save, echo=FALSE}
+
+regPOLCFR_10to19 <- lm(CFR_10to19~POLyears_10to19, data=POLCFR_Age)
+
+with(POLCFR_Age, plot(POLyears_10to19, CFR_10to19, main = "Polio Vaccine Coverage and CFR for Ages 10 to 19", xlab = "Group Coverage for Polio Vaccination", ylab = "CFR Level"))
+abline(regPOLCFR_10to19)
+
+```
+
+```{r save, echo=FALSE}
+
+regPOLCFR_20to29 <- lm(CFR_20to29~POLyears_20to29, data=POLCFR_Age)
+
+with(POLCFR_Age, plot(POLyears_20to29, CFR_20to29, main = "Polio Vaccine Coverage and CFR for Ages 20 to 29", xlab = "Group Coverage for Polio Vaccination", ylab = "CFR Level"))
+abline(regPOLCFR_20to29)
+
+```
+
+```{r save, echo=FALSE}
+
+regPOLCFR_30to39 <- lm(CFR_30to39~POLyears_30to39, data=POLCFR_Age)
+
+with(POLCFR_Age, plot(POLyears_30to39, CFR_30to39, main = "Polio Vaccine Coverage and CFR for Ages 30 to 39", xlab = "Group Coverage for Polio Vaccination", ylab = "CFR Level"))
+abline(regPOLCFR_30to39)
+
+```
+
+```{r clean, echo=FALSE}
+HEPclean <- read.csv(file = 'HEP.csv')
+list_of_names = names(HEPclean)
+list_of_names[1]= "country"
+for (i in 2:32){
+  list_of_names[i] <- 2021 - i
+}
+names(HEPclean) <- list_of_names
+HEP1clean <- HEPclean %>% slice(-1)
+
+col_order <- c("country", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998","1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+HEP1clean <- HEP1clean[, col_order]
+
+
+#Create columns that are the means for different age groups.
+HEP1clean$HEPyears_0to9 <- rowMeans(HEP1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+HEP1clean$HEPyears_10to19 <- rowMeans(HEP1clean[,c('2010', '2009', '2008','2007', '2006', '2005', '2004', '2003', '2002', '2001')], na.rm=TRUE) 
+
+HEP1clean$HEPyears_20to29 <- rowMeans(HEP1clean[,c('2000','1999', '1998','1997', '1996', '1995', '1994', '1993', '1992', '1991')], na.rm=TRUE)
+
+HEP1clean$HEPyears_30to39 <- rowMeans(HEP1clean[,c('1990','1989')], na.rm=TRUE)
+
+
+HEP_Age <- HEP1clean %>% select(country, HEPyears_0to9, HEPyears_10to19, HEPyears_20to29, HEPyears_30to39)
+
+HEP_Age$country <- trimws(HEP_Age$country)
+
+```
+
+```{r clean, echo=FALSE}
+HEPCFR_Age <- left_join(CFR_Age, HEP_Age, by=c('Country'='country')) 
+
+```
+
+```{r save, echo=FALSE}
+
+regHEPCFR_0to9 <- lm(CFR_0to9~HEPyears_0to9, data=HEPCFR_Age)
+
+with(HEPCFR_Age, plot(HEPyears_0to9, CFR_0to9, main = "Hepatitis B Vaccine Coverage and CFR for Ages 0 to 9", xlab = "Group Coverage for Hepatitis B Vaccination", ylab = "CFR Level"))
+abline(regHEPCFR_0to9)
+
+```
+
+```{r save, echo=FALSE}
+
+regHEPCFR_0to9 <- lm(CFR_0to9~HEPyears_0to9, data=HEPCFR_Age)
+
+with(HEPCFR_Age, plot(HEPyears_0to9, CFR_0to9, main = "Hepatitis B Vaccine Coverage and CFR for Ages 0 to 9", xlab = "Group Coverage for Hepatitis B Vaccination", ylab = "CFR Level"))
+abline(regHEPCFR_0to9)
+
+```
+
+```{r save, echo=FALSE}
+
+regHEPCFR_10to19 <- lm(CFR_10to19~HEPyears_10to19, data=HEPCFR_Age)
+
+with(HEPCFR_Age, plot(HEPyears_10to19, CFR_10to19, main = "Hepatitis B Vaccine Coverage and CFR for Ages 10 to 19", xlab = "Group Coverage for Hepatitis B Vaccination", ylab = "CFR Level"))
+abline(regHEPCFR_10to19)
+
+```
+
+```{r save, echo=FALSE}
+
+regHEPCFR_20to29 <- lm(CFR_20to29~HEPyears_20to29, data=HEPCFR_Age)
+
+with(HEPCFR_Age, plot(HEPyears_20to29, CFR_20to29, main = "Hepatitis B Vaccine Coverage and CFR for Ages 20 to 29", xlab = "Group Coverage for Hepatitis B Vaccination", ylab = "CFR Level"))
+abline(regHEPCFR_20to29)
+
+```
+
+```{r clean, echo=FALSE}
+HIBclean <- read.csv(file = 'HIB.csv')
+list_of_names = names(HIBclean)
+list_of_names[1]= "country"
+for (i in 2:30){
+  list_of_names[i] <- 2021 - i
+}
+names(HIBclean) <- list_of_names
+HIB1clean <- HIBclean %>% slice(-1)
+
+col_order <- c("country", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998","1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+HIB1clean <- HIB1clean[, col_order]
+
+
+#Create columns that are the means for different age groups.
+HIB1clean$HIByears_0to9 <- rowMeans(HIB1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+HIB1clean$HIByears_10to19 <- rowMeans(HIB1clean[,c('2010', '2009', '2008','2007', '2006', '2005', '2004', '2003', '2002', '2001')], na.rm=TRUE) 
+
+HIB1clean$HIByears_20to29 <- rowMeans(HIB1clean[,c('2000','1999', '1998','1997', '1996', '1995', '1994', '1993', '1992', '1991')], na.rm=TRUE)
+
+HIB_Age <- HIB1clean %>% select(country, HIByears_0to9, HIByears_10to19, HIByears_20to29)
+
+HIB_Age$country <- trimws(HIB_Age$country)
+
+```
+
+```{r clean, echo=FALSE}
+HIBCFR_Age <- left_join(CFR_Age, HIB_Age, by=c('Country'='country')) 
+
+```
+
+```{r save, echo=FALSE}
+
+regHIBCFR_0to9 <- lm(CFR_0to9~HIByears_0to9, data=HIBCFR_Age)
+
+with(HIBCFR_Age, plot(HIByears_0to9, CFR_0to9, main = "Haemophilus Influenzae Vaccine Coverage and CFR for Ages 0 to 9", xlab = "Group Coverage for Haemophilus Influenzae Vaccination", ylab = "CFR Level"))
+abline(regHIBCFR_0to9)
+
+```
+
+```{r save, echo=FALSE}
+
+regHIBCFR_10to19 <- lm(CFR_10to19~HIByears_10to19, data=HIBCFR_Age)
+
+with(HIBCFR_Age, plot(HIByears_10to19, CFR_10to19, main = "Haemophilus Influenzae Vaccine Coverage and CFR for Ages 10 to 19", xlab = "Group Coverage for Haemophilus Influenzae Vaccination", ylab = "CFR Level"))
+abline(regHIBCFR_10to19)
+
+```
+
+```{r save, echo=FALSE}
+
+regHIBCFR_20to29 <- lm(CFR_20to29~HIByears_20to29, data=HIBCFR_Age)
+
+with(HIBCFR_Age, plot(HIByears_20to29, CFR_20to29, main = "Haemophilus Influenzae Vaccine Coverage and CFR for Ages 20 to 29", xlab = "Group Coverage for Haemophilus Influenzae Vaccination", ylab = "CFR Level"))
+abline(regHIBCFR_20to29)
+
+```
+
+```{r clean, echo=FALSE}
+MCVclean <- read.csv(file = 'MCV.csv')
+list_of_names = names(MCVclean)
+list_of_names[1]= "country"
+for (i in 2:21){
+  list_of_names[i] <- 2021 - i
+}
+names(MCVclean) <- list_of_names
+MCV1clean <- MCVclean %>% slice(-1)
+
+col_order <- c("country", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+MCV1clean <- MCV1clean[, col_order]
+
+#Create columns that are the means for different age groups.
+MCV1clean$MCVyears_0to9 <- rowMeans(MCV1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+MCV1clean$MCVyears_10to19 <- rowMeans(MCV1clean[,c('2010', '2009', '2008','2007', '2006', '2005', '2004', '2003', '2002', '2001')], na.rm=TRUE) 
+
+MCV_Age <- MCV1clean %>% select(country, MCVyears_0to9, MCVyears_10to19)
+
+MCV_Age$country <- trimws(MCV_Age$country)
+
+```
+
+```{r clean, echo=FALSE}
+MCVCFR_Age <- left_join(CFR_Age, MCV_Age, by=c('Country'='country')) 
+
+```
+
+```{r save, echo=FALSE}
+
+regMCVCFR_0to9 <- lm(CFR_0to9~MCVyears_0to9, data=MCVCFR_Age)
+
+with(MCVCFR_Age, plot(MCVyears_0to9, CFR_0to9, main = "Measles 2nd Dose Vaccine Coverage and CFR for Ages 0 to 9", xlab = "Group Coverage for Measles 2nd Dose Vaccination", ylab = "CFR Level"))
+abline(regMCVCFR_0to9)
+
+```
+
+```{r save, echo=FALSE}
+
+regMCVCFR_10to19 <- lm(CFR_10to19~MCVyears_10to19, data=MCVCFR_Age)
+
+with(MCVCFR_Age, plot(MCVyears_10to19, CFR_10to19, main = "Measles 2nd Dose Vaccine Coverage and CFR for Ages 10 to 19", xlab = "Group Coverage for Measles 2nd Dose Vaccination", ylab = "CFR Level"))
+abline(regMCVCFR_10to19)
+
+```
+
+```{r clean, echo=FALSE}
+ROTclean <- read.csv(file = 'ROT.csv')
+list_of_names = names(ROTclean)
+list_of_names[1]= "country"
+for (i in 2:15){
+  list_of_names[i] <- 2021 - i
+}
+names(ROTclean) <- list_of_names
+ROT1clean <- ROTclean %>% slice(-1)
+
+col_order <- c("country", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+ROT1clean <- ROT1clean[, col_order]
+
+#Create columns that are the means for different age groups.
+ROT1clean$ROTyears_0to9 <- rowMeans(ROT1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+ROT1clean$ROTyears_10to19 <- rowMeans(ROT1clean[,c('2010', '2009', '2008','2007', '2006')], na.rm=TRUE) 
+
+ROT_Age <- ROT1clean %>% select(country, ROTyears_0to9, ROTyears_10to19)
+
+ROT_Age$country <- trimws(ROT_Age$country)
+
+```
+
+```{r clean, echo=FALSE}
+ROTCFR_Age <- left_join(CFR_Age, ROT_Age, by=c('Country'='country')) 
+#NOT enough data points to work
+```
+
+
+```{r clean, echo=FALSE}
+PCVclean <- read.csv(file = 'PCV.csv')
+list_of_names = names(PCVclean)
+list_of_names[1]= "country"
+for (i in 2:13){
+  list_of_names[i] <- 2021 - i
+}
+names(PCVclean) <- list_of_names
+PCV1clean <- PCVclean %>% slice(-1)
+
+col_order <- c("country", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+PCV1clean <- PCV1clean[, col_order]
+
+
+#Create columns that are the means for different age groups.
+PCV1clean$PCVyears_0to9 <- rowMeans(PCV1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+PCV1clean$PCVyears_10to19 <- rowMeans(PCV1clean[,c('2010', '2009', '2008')], na.rm=TRUE) 
+
+PCV_Age <- PCV1clean %>% select(country, PCVyears_0to9, PCVyears_10to19)
+
+PCV_Age$country <- trimws(PCV_Age$country)
+
+```
+
+```{r clean, echo=FALSE}
+PCVCFR_Age <- left_join(CFR_Age, PCV_Age, by=c('Country'='country')) 
+
+```
+
+```{r save, echo=FALSE}
+
+regPCVCFR_0to9 <- lm(CFR_0to9~PCVyears_0to9, data=PCVCFR_Age)
+
+with(PCVCFR_Age, plot(PCVyears_0to9, CFR_0to9, main = "Pneumococcal Conjugate Vaccine Coverage and CFR for Ages 0 to 9", xlab = "Group Coverage for Pneumococcal Conjugate Vaccination", ylab = "CFR Level"))
+abline(regPCVCFR_0to9)
+
+#Not enough data for more on the four countries
+```
+
+
+
+
+
+
+
+
+
+
+
+
