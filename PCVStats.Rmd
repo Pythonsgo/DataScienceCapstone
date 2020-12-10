@@ -1,0 +1,100 @@
+---
+title: "Pneumococcal Conjugate (PCV) Data Summary"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Get packages,  eval=TRUE, include=FALSE}
+library(tidyverse)
+library(purrr)
+```
+
+```{r clean, echo=FALSE}
+PCVclean <- read.csv(file = 'PCV.csv')
+list_of_names = names(PCVclean)
+list_of_names[1]= "country"
+for (i in 2:13){
+  list_of_names[i] <- 2021 - i
+}
+names(PCVclean) <- list_of_names
+PCV1clean <- PCVclean %>% slice(-1)
+
+col_order <- c("country", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+PCV1clean <- PCV1clean[, col_order]
+
+
+#Create columns that are the means for different age groups.
+PCV1clean$years_0to9 <- rowMeans(PCV1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+PCV1clean$years_10to19 <- rowMeans(PCV1clean[,c('2010', '2009', '2008')], na.rm=TRUE) 
+
+```
+
+
+```{r summary, eval=TRUE, echo=FALSE, warning=FALSE, include = TRUE, results = 'asis'}
+
+#Create a dataframe of just the columns of interest and round values.
+PCV_age <- PCV1clean %>% select(country, starts_with("years"))
+temp <-names(PCV_age)[2:3]
+
+PCV_age[,temp]=round(PCV_age[,temp],1)
+
+our_summary1 <-
+  list("Ages 0 to 9 years" =
+       list("min"       = ~ min(.data$years_0to9, na.rm=TRUE),
+            "median"    = ~ median(.data$years_0to9, na.rm=TRUE),
+            "max"       = ~ max(.data$years_0to9, na.rm=TRUE),
+            "sd"        = ~ sd(.data$years_0to9, na.rm=TRUE),
+            "mean"      = ~ mean(.data$years_0to9, na.rm=TRUE)),
+       "Ages 10 to 19 years" =
+       list("min"       = ~ min(.data$years_10to19, na.rm=TRUE),
+            "median"    = ~ median(.data$years_10to19, na.rm=TRUE),
+            "max"       = ~ max(.data$years_10to19, na.rm=TRUE),
+            "sd"        = ~ sd(.data$years_10to19, na.rm=TRUE),
+            "mean"      = ~ mean(.data$years_10to19, na.rm=TRUE))
+)
+
+
+library(qwraps2)
+
+
+options(qwraps2_markup = 'markdown')
+
+PCV_summary <- summary_table(PCV_age, our_summary1)
+
+PCV_summary
+
+
+```
+
+
+```{r graph, eval=TRUE, echo=FALSE}
+
+PCV_graph <- PCV_age %>%
+  select("country", "years_0to9", "years_10to19")
+ 
+
+PCV_new_graph <- PCV_graph %>%
+  pivot_longer(!country, names_to = "Age", values_to = "Coverage_Pneumococcal_Conjugate")
+
+test <- PCV_new_graph%>%
+  filter(country=="Brazil" | country=="Spain" | country=="United States of America"  | country=="Japan" | country=="Kenya" | country=="Egypt")
+  
+
+library(ggplot2)
+# Basic scatter plot
+
+ggplot(test, aes(x=Age, y=Coverage_Pneumococcal_Conjugate, color=country)) + geom_point()
+
+```
+
+```{r graph2, eval=TRUE, echo=FALSE}
+
+ggplot(PCV_new_graph, aes(x=Age, y=Coverage_Pneumococcal_Conjugate)) + geom_point()
+
+```

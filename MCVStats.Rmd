@@ -1,0 +1,97 @@
+---
+title: "Measles Dose 2 (MCV) Summary Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Get packages,  eval=TRUE, include=FALSE}
+library(tidyverse)
+library(purrr)
+```
+
+```{r clean, echo=FALSE}
+MCVclean <- read.csv(file = 'MCV.csv')
+list_of_names = names(MCVclean)
+list_of_names[1]= "country"
+for (i in 2:21){
+  list_of_names[i] <- 2021 - i
+}
+names(MCVclean) <- list_of_names
+MCV1clean <- MCVclean %>% slice(-1)
+
+col_order <- c("country", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+MCV1clean <- MCV1clean[, col_order]
+
+#Create columns that are the means for different age groups.
+MCV1clean$years_0to9 <- rowMeans(MCV1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+MCV1clean$years_10to19 <- rowMeans(MCV1clean[,c('2010', '2009', '2008','2007', '2006', '2005', '2004', '2003', '2002', '2001')], na.rm=TRUE) 
+
+```
+
+
+```{r summary, eval=TRUE, echo=FALSE, warning=FALSE, include = TRUE, results = 'asis'}
+
+#Create a dataframe of just the columns of interest and round values.
+MCV_age <- MCV1clean %>% select(country, starts_with("years"))
+temp <-names(MCV_age)[2:3]
+
+MCV_age[,temp]=round(MCV_age[,temp],1)
+
+our_summary1 <-
+  list("Ages 0 to 9 years" =
+       list("min"       = ~ min(.data$years_0to9, na.rm=TRUE),
+            "median"    = ~ median(.data$years_0to9, na.rm=TRUE),
+            "max"       = ~ max(.data$years_0to9, na.rm=TRUE),
+            "sd"        = ~ sd(.data$years_0to9, na.rm=TRUE),
+            "mean"      = ~ mean(.data$years_0to9, na.rm=TRUE)),
+       "Ages 10 to 19 years" =
+       list("min"       = ~ min(.data$years_10to19, na.rm=TRUE),
+            "median"    = ~ median(.data$years_10to19, na.rm=TRUE),
+            "max"       = ~ max(.data$years_10to19, na.rm=TRUE),
+            "sd"        = ~ sd(.data$years_10to19, na.rm=TRUE),
+            "mean"      = ~ mean(.data$years_10to19, na.rm=TRUE))
+       )
+
+
+library(qwraps2)
+
+
+options(qwraps2_markup = 'markdown')
+
+MCV_summary <- summary_table(MCV_age, our_summary1)
+
+MCV_summary
+
+
+```
+
+
+```{r graph, eval=TRUE, echo=FALSE}
+
+MCV_graph <- MCV_age %>%
+  select("country", "years_0to9", "years_10to19") 
+
+MCV_new_graph <- MCV_graph %>%
+  pivot_longer(!country, names_to = "Age", values_to = "Coverage_Measles2")
+
+test <- MCV_new_graph%>%
+  filter(country=="Brazil" | country=="Spain" | country=="United States of America"  | country=="Japan" | country=="Kenya" | country=="Egypt")
+  
+
+library(ggplot2)
+# Basic scatter plot
+
+ggplot(test, aes(x=Age, y=Coverage_Measles2, color=country)) + geom_point()
+
+```
+
+```{r graph2, eval=TRUE, echo=FALSE}
+
+ggplot(MCV_new_graph, aes(x=Age, y=Coverage_Measles2)) + geom_point()
+
+```

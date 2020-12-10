@@ -1,0 +1,102 @@
+---
+title: "Rotavirus Summary Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Get packages,  eval=TRUE, include=FALSE}
+library(tidyverse)
+library(purrr)
+```
+
+```{r clean, echo=FALSE}
+ROTclean <- read.csv(file = 'ROT.csv')
+list_of_names = names(ROTclean)
+list_of_names[1]= "country"
+for (i in 2:15){
+  list_of_names[i] <- 2021 - i
+}
+names(ROTclean) <- list_of_names
+ROT1clean <- ROTclean %>% slice(-1)
+
+col_order <- c("country", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")
+
+ROT1clean <- ROT1clean[, col_order]
+
+#Create columns that are the means for different age groups.
+ROT1clean$years_0to9 <- rowMeans(ROT1clean[,c('2019', '2018','2017', '2016', '2015', '2014', '2013', '2012', '2011')], na.rm=TRUE)
+ 
+ROT1clean$years_10to19 <- rowMeans(ROT1clean[,c('2010', '2009', '2008','2007', '2006')], na.rm=TRUE) 
+
+```
+
+
+
+
+
+
+```{r summary, eval=TRUE, echo=FALSE, warning=FALSE, include = TRUE, results = 'asis'}
+
+#Create a dataframe of just the columns of interest and round values.
+ROT_age <- ROT1clean %>% select(country, starts_with("years"))
+temp <-names(ROT_age)[2:3]
+
+ROT_age[,temp]=round(ROT_age[,temp],1)
+
+our_summary1 <-
+  list("Ages 0 to 9 years" =
+       list("min"       = ~ min(.data$years_0to9, na.rm=TRUE),
+            "median"    = ~ median(.data$years_0to9, na.rm=TRUE),
+            "max"       = ~ max(.data$years_0to9, na.rm=TRUE),
+            "sd"        = ~ sd(.data$years_0to9, na.rm=TRUE),
+            "mean"      = ~ mean(.data$years_0to9, na.rm=TRUE)),
+       "Ages 10 to 19 years" =
+       list("min"       = ~ min(.data$years_10to19, na.rm=TRUE),
+            "median"    = ~ median(.data$years_10to19, na.rm=TRUE),
+            "max"       = ~ max(.data$years_10to19, na.rm=TRUE),
+            "sd"        = ~ sd(.data$years_10to19, na.rm=TRUE),
+            "mean"      = ~ mean(.data$years_10to19, na.rm=TRUE))
+)
+
+
+library(qwraps2)
+
+
+options(qwraps2_markup = 'markdown')
+
+ROT_summary <- summary_table(ROT_age, our_summary1)
+
+ROT_summary
+
+
+```
+
+
+```{r graph, eval=TRUE, echo=FALSE}
+
+ROT_graph <- ROT_age %>%
+  select("country", "years_0to9", "years_10to19") 
+ 
+
+ROT_new_graph <- ROT_graph %>%
+  pivot_longer(!country, names_to = "Age", values_to = "Coverage_Rotavirus")
+
+test <- ROT_new_graph%>%
+  filter(country=="Brazil" | country=="Spain" | country=="United States of America"  | country=="Japan" | country=="Kenya" | country=="Egypt")
+  
+
+library(ggplot2)
+# Basic scatter plot
+
+ggplot(test, aes(x=Age, y=Coverage_Rotavirus, color=country)) + geom_point()
+
+```
+
+```{r graph2, eval=TRUE, echo=FALSE}
+
+ggplot(ROT_new_graph, aes(x=Age, y=Coverage_Rotavirus)) + geom_point()
+
+```
